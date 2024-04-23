@@ -131,59 +131,43 @@ print(check_data.keys())
 #roberta_model.classifier
 
 
-#class MultiGPUClassifier(torch.nn.Module):
-#    def __init__(self, roberta_model):
-#        super(MultiGPUClassifier, self).__init__()
-#        self.embedding = roberta_model.roberta.embeddings.to('cuda:0')
-#        self.encoder = roberta_model.roberta.encoder.to('cuda:1')
-#        self.classifier = roberta_model.classifier.to('cuda:1')
-#        
-#    def forward(self, input_ids, token_type_ids = None, attention_mask = None, labels = None):
-#        emb_out = self.embedding(input_ids.to('cuda:0'))
-#        enc_out = self.encoder(emb_out.to('cuda:1'))
-#        classifier_out = self.classifier(enc_out[0])
-#        return classifier_out        
+class MultiGPUClassifier(torch.nn.Module):
+    def __init__(self, roberta_model):
+        super(MultiGPUClassifier, self).__init__()
+        self.embedding = roberta_model.roberta.embeddings.to('cuda:0')
+        self.encoder = roberta_model.roberta.encoder.to('cuda:1')
+        self.classifier = roberta_model.classifier.to('cuda:1')
+        
+    def forward(self, input_ids, token_type_ids = None, attention_mask = None, labels = None):
+        emb_out = self.embedding(input_ids.to('cuda:0'))
+        enc_out = self.encoder(emb_out.to('cuda:1'))
+        classifier_out = self.classifier(enc_out[0])
+        return classifier_out        
 
 
-#
-#get_ipython().system('nvidia-smi')
-#
-#
-## In[ ]:
-#
-#
-#multi_gpu_roberta = MultiGPUClassifier(roberta_model)
-#
-#
-## In[ ]:
-#
-#
-#from transformers import get_linear_schedule_with_warmup, AdamW
-#
-#
-## In[ ]:
-#
-#
-#EPOCHS = 2
-#LR = 1e-5
-#
-#optimizer = AdamW(multi_gpu_roberta.parameters(), lr = LR)
-#total_steps = len(train_data_loader) * EPOCHS
-#
-#scheduler = get_linear_schedule_with_warmup(optimizer, 
-#                                           num_warmup_steps = 0, 
-#                                           num_training_steps = total_steps)
-#
-#
-## In[ ]:
-#
-#
-#loss_fn = torch.nn.CrossEntropyLoss().to('cuda:1')
-#
-#
-## In[ ]:
-#
-#
+
+multi_gpu_roberta = MultiGPUClassifier(roberta_model)
+
+
+from transformers import get_linear_schedule_with_warmup, AdamW
+
+EPOCHS = 2
+LR = 1e-5
+
+optimizer = AdamW(multi_gpu_roberta.parameters(), lr = LR)
+total_steps = len(train_data_loader) * EPOCHS
+
+scheduler = get_linear_schedule_with_warmup(optimizer, 
+                                           num_warmup_steps = 0, 
+                                           num_training_steps = total_steps)
+
+
+
+loss_fn = torch.nn.CrossEntropyLoss().to('cuda:1')
+
+print(loss_fn)
+
+
 #def train_model(model, data_loader, loss_fn, optimizer, scheduler, n_examples):
 #    model = model.train()
 #    losses = []
