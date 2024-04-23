@@ -114,6 +114,8 @@ val_data_loader = create_data_loader(df_val, roberta_tok, MAX_LEN, BATCH_SIZE)
 check_data = next(iter(train_data_loader))
 check_data.keys()
 
+print(check_data.keys())
+
 
 # Uncomment and run this cell to visualize the roberta-large architecture
 #roberta_model
