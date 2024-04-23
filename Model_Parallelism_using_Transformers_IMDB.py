@@ -31,138 +31,104 @@ imdb_df = imdb_df.drop(['sentiment'], axis = 1)
 imdb_df.label.value_counts()
 
 
-PRETRAINED_MODEL_NAME = 'roberta-large'
-PRETRAINED_MODEL_PATH = '../models/' + PRETRAINED_MODEL_NAME
-
-
+#PRETRAINED_MODEL_NAME = 'roberta-large'
+#PRETRAINED_MODEL_PATH = '../models/' + PRETRAINED_MODEL_NAME
+#
+#print(PRETRAINED_MODEL_PATH)
+#
 #from transformers import RobertaForSequenceClassification, RobertaTokenizer, RobertaConfig
-#
-#
-## In[ ]:
 #
 #
 #roberta_model = RobertaForSequenceClassification.from_pretrained(PRETRAINED_MODEL_PATH)
 #roberta_tok = RobertaTokenizer.from_pretrained(PRETRAINED_MODEL_PATH)
-#
-#
-## In[ ]:
-#
-#
-#import torch
-#from sklearn.model_selection import train_test_split
-#
-#
-## In[ ]:
-#
-#
-#class CreateDataset(torch.utils.data.Dataset):
-#    def __init__(self, reviews, labels, tokenizer, max_len):
-#        self.reviews = reviews
-#        self.labels = labels
-#        self.tokenizer = tokenizer
-#        self.max_len = max_len
-#        
-#    def __len__(self):
-#        return len(self.reviews)
-#    
-#    def __getitem__(self, item):
-#        review = str(self.reviews[item])
-#        label = self.labels[item]
-#        
-#        encoding = self.tokenizer.encode_plus(review, 
-#                                             add_special_tokens = True,
-#                                             max_length = self.max_len, 
-#                                             truncation = True,
-#                                             return_tensors = 'pt',
-#                                             return_token_type_ids = False,
-#                                             return_attention_mask = True,
-#                                             padding = 'max_length')
-#        
-#        return{
-#            'review_text': review,
-#            'input_ids' : encoding['input_ids'].flatten(),
-#            'attention_mask' : encoding['attention_mask'].flatten(),
-#            'labels' : torch.tensor(label, dtype=torch.long)            
-#        }
-#
-#
-## In[ ]:
-#
-#
-#df_train, df_val = train_test_split(imdb_df, test_size = 0.3, random_state = 2021)
-#print(df_train.shape, df_val.shape)
-#
-#
-## In[ ]:
-#
-#
-#print(df_train.label.value_counts())
-#print(df_val.label.value_counts())
-#
-#
-## In[ ]:
-#
-#
-#def create_data_loader(df, tokenizer, max_len, batch_size):
-#    ds = CreateDataset(reviews = df.review.to_numpy(),
-#                       labels = df.label.to_numpy(),
-#                       tokenizer = tokenizer,
-#                       max_len = max_len
-#                      )
-#    
-#    return torch.utils.data.DataLoader(ds, 
-#                                       batch_size = batch_size, 
-#                                       num_workers = 4)
-#
-#
-## In[ ]:
-#
-#
-#MAX_LEN = 512
-#BATCH_SIZE = 8
-#
-#train_data_loader = create_data_loader(df_train, roberta_tok, MAX_LEN, BATCH_SIZE)
-#val_data_loader = create_data_loader(df_val, roberta_tok, MAX_LEN, BATCH_SIZE)
-#
-#
-## In[ ]:
-#
-#
-#check_data = next(iter(train_data_loader))
-#check_data.keys()
-#
-#
-## In[ ]:
-#
-#
-## Uncomment and run this cell to visualize the roberta-large architecture
-##roberta_model
-#
-#
-## In[ ]:
-#
-#
-## Embedding layer
-##roberta_model.roberta.embeddings
-#
-#
-## In[ ]:
-#
-#
-## Encoder Layers
-##roberta_model.roberta.encoder
-#
-#
-## In[ ]:
-#
-#
-## Classifier Layer
-##roberta_model.classifier
-#
-#
-## In[ ]:
-#
-#
+
+from transformers import RobertaForSequenceClassification, RobertaTokenizer
+
+model_name = "roberta-large"  # Model name from Hugging Face model hub
+roberta_model = RobertaForSequenceClassification.from_pretrained(model_name)
+roberta_tok = RobertaTokenizer.from_pretrained(model_name)
+
+
+import torch
+from sklearn.model_selection import train_test_split
+
+class CreateDataset(torch.utils.data.Dataset):
+    def __init__(self, reviews, labels, tokenizer, max_len):
+        self.reviews = reviews
+        self.labels = labels
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+        
+    def __len__(self):
+        return len(self.reviews)
+    
+    def __getitem__(self, item):
+        review = str(self.reviews[item])
+        label = self.labels[item]
+        
+        encoding = self.tokenizer.encode_plus(review, 
+                                             add_special_tokens = True,
+                                             max_length = self.max_len, 
+                                             truncation = True,
+                                             return_tensors = 'pt',
+                                             return_token_type_ids = False,
+                                             return_attention_mask = True,
+                                             padding = 'max_length')
+        
+        return{
+            'review_text': review,
+            'input_ids' : encoding['input_ids'].flatten(),
+            'attention_mask' : encoding['attention_mask'].flatten(),
+            'labels' : torch.tensor(label, dtype=torch.long)            
+        }
+
+
+df_train, df_val = train_test_split(imdb_df, test_size = 0.3, random_state = 2021)
+print(df_train.shape, df_val.shape)
+
+
+print(df_train.label.value_counts())
+print(df_val.label.value_counts())
+
+
+
+def create_data_loader(df, tokenizer, max_len, batch_size):
+    ds = CreateDataset(reviews = df.review.to_numpy(),
+                       labels = df.label.to_numpy(),
+                       tokenizer = tokenizer,
+                       max_len = max_len
+                      )
+    
+    return torch.utils.data.DataLoader(ds, 
+                                       batch_size = batch_size, 
+                                       num_workers = 4)
+
+
+MAX_LEN = 512
+BATCH_SIZE = 8
+
+train_data_loader = create_data_loader(df_train, roberta_tok, MAX_LEN, BATCH_SIZE)
+val_data_loader = create_data_loader(df_val, roberta_tok, MAX_LEN, BATCH_SIZE)
+
+
+check_data = next(iter(train_data_loader))
+check_data.keys()
+
+
+# Uncomment and run this cell to visualize the roberta-large architecture
+#roberta_model
+
+
+# Embedding layer
+#roberta_model.roberta.embeddings
+
+# Encoder Layers
+#roberta_model.roberta.encoder
+
+# Classifier Layer
+#roberta_model.classifier
+
+
 #class MultiGPUClassifier(torch.nn.Module):
 #    def __init__(self, roberta_model):
 #        super(MultiGPUClassifier, self).__init__()
@@ -175,10 +141,8 @@ PRETRAINED_MODEL_PATH = '../models/' + PRETRAINED_MODEL_NAME
 #        enc_out = self.encoder(emb_out.to('cuda:1'))
 #        classifier_out = self.classifier(enc_out[0])
 #        return classifier_out        
-#
-#
-## In[ ]:
-#
+
+
 #
 #get_ipython().system('nvidia-smi')
 #
