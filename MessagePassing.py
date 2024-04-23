@@ -1,4 +1,5 @@
-!pip3 install torchvision 
+!pip3 install torchvision
+!conda install pytorch torchvision -c pytorch
 
 import os
 import argparse
