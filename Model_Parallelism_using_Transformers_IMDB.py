@@ -1,34 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-get_ipython().system('nvidia-smi')
-
-
-# In[ ]:
+#get_ipython().system('nvidia-smi')
 
 
 import pandas as pd
 import numpy as np
 
 
-# In[ ]:
-
 
 imdb_df = pd.read_csv('IMDB_Dataset.csv', index_col = None)
 
-#
-## In[ ]:
-#
-#
+print(len(imdb_df))
+
 #imdb_df.head(3)
-#
-#
-## In[ ]:
-#
-#
+
 #label = []
 #
 #for index, row in imdb_df.iterrows():
@@ -36,15 +22,10 @@ imdb_df = pd.read_csv('IMDB_Dataset.csv', index_col = None)
 #    else: label.append(0)
 #
 #
-## In[ ]:
-#
-#
 #imdb_df['label'] = label
 #
 #imdb_df = imdb_df.drop(['sentiment'], axis = 1)
 #
-#
-## In[ ]:
 #
 #
 #imdb_df = imdb_df.head(10000)
