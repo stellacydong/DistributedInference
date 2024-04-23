@@ -1,5 +1,7 @@
-!pip3 install torchvision
-!conda install pytorch torchvision -c pytorch
+import sys
+import subprocess
+# implement pip as a subprocess:
+subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'torch'])
 
 import os
 import argparse
