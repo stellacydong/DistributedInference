@@ -1,3 +1,5 @@
+!pip install torch
+
 import os
 import argparse
 
