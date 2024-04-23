@@ -1,4 +1,4 @@
-!pip install torch
+!pip install torchvision 
 
 import os
 import argparse
