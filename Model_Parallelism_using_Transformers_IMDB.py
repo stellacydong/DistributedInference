@@ -11,42 +11,30 @@ import numpy as np
 
 imdb_df = pd.read_csv('IMDB_Dataset.csv', index_col = None)
 
-print(len(imdb_df))
 
 #imdb_df.head(3)
 
-#label = []
-#
-#for index, row in imdb_df.iterrows():
-#    if(row['sentiment'] == 'positive'): label.append(1)
-#    else: label.append(0)
-#
-#
-#imdb_df['label'] = label
-#
-#imdb_df = imdb_df.drop(['sentiment'], axis = 1)
-#
-#
-#
+label = []
+
+for index, row in imdb_df.iterrows():
+    if(row['sentiment'] == 'positive'): label.append(1)
+    else: label.append(0)
+
+
+imdb_df['label'] = label
+
+imdb_df = imdb_df.drop(['sentiment'], axis = 1)
+
 #imdb_df = imdb_df.head(10000)
-#
-#
-## In[ ]:
-#
-#
-#imdb_df.label.value_counts()
-#
-#
-## In[ ]:
-#
-#
-#PRETRAINED_MODEL_NAME = 'roberta-large'
-#PRETRAINED_MODEL_PATH = '../models/' + PRETRAINED_MODEL_NAME
-#
-#
-## In[ ]:
-#
-#
+
+
+imdb_df.label.value_counts()
+
+
+PRETRAINED_MODEL_NAME = 'roberta-large'
+PRETRAINED_MODEL_PATH = '../models/' + PRETRAINED_MODEL_NAME
+
+
 #from transformers import RobertaForSequenceClassification, RobertaTokenizer, RobertaConfig
 #
 #
