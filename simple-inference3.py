@@ -21,7 +21,8 @@ prompts_all=[
 ] * 5
 
 # load a base model and tokenizer
-model_path = "meta-llama/Llama-2-7b-hf"
+# model_path = "meta-llama/Llama-2-7b-hf"
+model_path = "petals-team/StableBeluga2"  # Example model
 model = AutoModelForCausalLM.from_pretrained(
     model_path,    
     device_map={"": accelerator.process_index},
