@@ -1,5 +1,7 @@
 python3 -m pip install transformers accelerate torch bitsandbytes
 
+huggingface-cli login --token  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 --add-to-git-credential
+
 export NCCL_P2P_DISABLE="1"
 export NCCL_IB_DISABLE="1"
 
