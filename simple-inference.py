@@ -4,6 +4,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import time
 
+from transformers.utils import logging
+logging.get_logger("transformers").setLevel(logging.ERROR)
+
 # Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
