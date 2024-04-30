@@ -24,7 +24,7 @@ print(current_device)
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map={"": current_device},  # Explicitly set the device
-    torch_dtype=torch.float32,  # Use mixed precision for efficiency
+    torch_dtype=torch.float16,  # Use mixed precision for efficiency
 )
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
