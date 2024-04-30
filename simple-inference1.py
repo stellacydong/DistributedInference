@@ -20,28 +20,28 @@ prompts_all=[
     "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
 ] * 10
 
-# # load a base model and tokenizer
-# model_path = "meta-llama/Llama-2-7b-hf"
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_path,    
-#     device_map={"": accelerator.process_index},
-#     torch_dtype=torch.bfloat16,
-# )
+# load a base model and tokenizer
+model_path = "meta-llama/Llama-2-7b-hf"
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,    
+    device_map={"": accelerator.process_index},
+    torch_dtype=torch.bfloat16,
+)
 # tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
-pretrained_name_or_path='meta-llama/Llama-2-7b-hf' 
+# model_path='meta-llama/Llama-2-7b-hf' 
 
-model = transformers.AutoModelForCausalLM.from_pretrained(
-    pretrained_name_or_path,
-    trust_remote_code="true",
-    torch_dtype=fp_type,
-    device_map= None,
-    # token=HF_TOKEN,
-    use_auth_token="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"
-)
+# model = transformers.AutoModelForCausalLM.from_pretrained(
+#     model_path,
+#     trust_remote_code="true",
+#     torch_dtype=fp_type,
+#     device_map= None,
+#     # token=HF_TOKEN,
+#     use_auth_token="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"
+# )
 
 tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_name_or_path, 
+    model_path, 
     trust_remote_code="true", 
     padding_side="left",
     # token=HF_TOKEN, 
