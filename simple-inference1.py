@@ -1,72 +1,62 @@
-# Python script: simple-inference.py
 from accelerate import Accelerator
+from accelerate.utils import gather_object
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-import time
+from statistics import mean
+import torch, time, json
 
-# Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
-# GPT-2 Small model with 124M parameters
-model_path = "gpt2"  # Using the smallest GPT-2 model
-num_gpus = torch.cuda.device_count()  # Check the number of available GPUs
+# 10*10 Prompts. Source: https://www.penguin.co.uk/articles/2022/04/best-first-lines-in-books
+prompts_all=[
+    "The King is dead. Long live the Queen.",
+    "Once there were four children whose names were Peter, Susan, Edmund, and Lucy.",
+    "The story so far: in the beginning, the universe was created.",
+    "It was a bright cold day in April, and the clocks were striking thirteen.",
+    "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+    "The sweat wis lashing oafay Sick Boy; he wis trembling.",
+    "124 was spiteful. Full of Baby's venom.",
+    "As Gregor Samsa awoke one morning from uneasy dreams he found himself transformed in his bed into a gigantic insect.",
+    "I write this sitting in the kitchen sink.",
+    "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
+] * 10
 
-print(f"Using {num_gpus} GPUs for distributed processing.")
-
-# Load the model and tokenizer
-current_device = torch.device(f"cuda:{accelerator.process_index}")
-
+# load a base model and tokenizer
+model_path = "meta-llama/Llama-2-7b-hf"
 model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    device_map={"": current_device},  # Explicitly set the device
-    torch_dtype=torch.float16,  # Use mixed precision for efficiency
+    model_path,    
+    device_map={"": accelerator.process_index},
+    torch_dtype=torch.bfloat16,
 )
+tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-
-# Example prompts for testing
-prompts = ["Hello, world!", "What's your favorite movie?", "Tell me a story."]
-
-# Synchronize GPUs and start the timer
+# sync GPUs and start the timer
 accelerator.wait_for_everyone()
-start_time = time.time()
+start=time.time()
 
-# Distribute prompts across GPUs and gather results
-outputs = []
-total_tokens = 0
-with accelerator.split_between_processes(prompts) as subset_prompts:
-    for prompt in subset_prompts:
-        # Tokenize and move inputs to the correct device
-        inputs = tokenizer(prompt, return_tensors="pt").to(current_device)
-        
-        # Generate text with the model
-        generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
-        
-        # Decode the generated text
-        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
-        
-        outputs.append(generated_text)
+# divide the prompt list onto the available GPUs 
+with accelerator.split_between_processes(prompts_all) as prompts:
+    # store output of generations in dict
+    results=dict(outputs=[], num_tokens=0)
 
-        # Count the total number of tokens generated
-        total_tokens += len(generated_ids[0])
+    # have each GPU do inference, prompt by prompt
+    for prompt in prompts:
+        prompt_tokenized=tokenizer(prompt, return_tensors="pt").to("cuda")
+        output_tokenized = model.generate(**prompt_tokenized, max_new_tokens=100)[0]
 
-# Synchronize processes before outputting results
-accelerator.wait_for_everyone()
+        # remove prompt from output 
+        output_tokenized=output_tokenized[len(prompt_tokenized["input_ids"][0]):]
 
-# Calculate the time taken for inference
-elapsed_time = time.time() - start_time
+        # store outputs and number of tokens in result{}
+        results["outputs"].append( tokenizer.decode(output_tokenized) )
+        results["num_tokens"] += len(output_tokenized)
 
-# Calculate tokens per second
-tokens_per_second = total_tokens / elapsed_time
+    results=[ results ] # transform to list, otherwise gather_object() will not collect correctly
 
-# Calculate the average time per token
-average_time_per_token = elapsed_time / total_tokens
+# collect results from all the GPUs
+results_gathered=gather_object(results)
 
-# Display results if in the main process
 if accelerator.is_main_process:
-    print(f"Inference completed in {elapsed_time:.2f} seconds.")
-    print(f"Tokens per second: {tokens_per_second:.2f}")
-    print(f"Average time per token: {average_time_per_token:.4f} seconds.")
-    print("Generated Outputs:")
-    for i, output in enumerate(outputs):
-        print(f"Output {i + 1}: {output}")
+    timediff=time.time()-start
+    num_tokens=sum([r["num_tokens"] for r in results_gathered ])
+
+    print(f"tokens/sec: {num_tokens//timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
