@@ -26,11 +26,11 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,  # Use mixed precision for efficiency
 )
 
-# tokenizer = AutoTokenizer.from_pretrained(model_path, padding_size="left")
-tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, padding_side="left", add_eos_token=True, add_bos_token=True)
+# tokenizer = AutoTokenizer.from_pretrained(model_path)
+# tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=True, padding_side="left", add_eos_token=True, add_bos_token=True)
 
-if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+# if tokenizer.pad_token is None:
+#             tokenizer.pad_token = tokenizer.eos_token
     
 
 # Example prompts for testing
@@ -48,8 +48,8 @@ with accelerator.split_between_processes(prompts) as subset_prompts:
         inputs = tokenizer(prompt, return_tensors="pt").to(current_device)
         
         # Generate text with the model
-        # generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
-        generated_ids = model.generate(pad_token_id=tokenizer.pad_token_id, max_new_tokens=50)
+        generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
+        # generated_ids = model.generate(pad_token_id=tokenizer.pad_token_id, max_new_tokens=50)
         
         # Decode the generated text
         generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
