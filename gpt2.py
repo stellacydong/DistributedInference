@@ -1,69 +1,81 @@
+import os
 import torch
 from accelerate import Accelerator
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 
+# Ensure PyTorch CUDA environment is configured to avoid memory fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["NCCL_P2P_DISABLE"] = "1"
+os.environ["NCCL_IB_DISABLE"] = "1"
+
 # Initialize Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
-# Check how many GPUs are available
+# Check how many GPUs are available and ensure a minimum count
 gpu_count = torch.cuda.device_count()
+assert gpu_count >= 2, "Multi-GPU setup requires at least two GPUs."
 print(f"Available GPUs: {gpu_count}")
 
-assert gpu_count >= 2, "Multi-GPU setup requires at least two GPUs."
+# Clear CUDA cache to free up GPU memory
+torch.cuda.empty_cache()
 
-# Hugging Face token for authentication (if needed)
+# Hugging Face authentication token (if needed)
 hf_token = "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"  # Replace with your token if accessing gated repositories
 
-# Load a pre-trained LLM and tokenizer
-model_name = "gpt2"  # Example; change to your desired model
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
-
-# Configure the model for multi-GPU
+# Use 'auth_token' instead of 'use_auth_token'
+model_path = "petals-team/StableBeluga2"
 model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    device_map="auto",  # Let Accelerate map GPUs
-    torch_dtype=torch.float16,  # Efficient GPU usage
-    use_auth_token=hf_token  # For accessing gated repositories
+    model_path,
+    device_map="auto",
+    torch_dtype=torch.float16,
+    auth_token=hf_token,  # For gated repositories
 )
+
+# Load the tokenizer with the same token
+tokenizer = AutoTokenizer.from_pretrained(model_path, auth_token=hf_token)
 
 # Ensure the tokenizer has a padding token
 if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})  # Add a padding token
+    tokenizer.add_special_tokens({"pad_token": "[PAD]"})  # Avoid padding issues
 
+# Prepare inputs for multi-GPU inference
+prompts = ["Example prompt 1", "Example prompt 2"]  # Adjust as needed
+inputs = tokenizer(
+    prompts,
+    return_tensors="pt",
+    padding=True,
+    truncation=True,
+    max_length=50  # Adjust based on model context size
+).to(accelerator.device)  # Ensure inputs are on the correct device
 
-# Example: Set up a local server hosting specific model blocks
-from petals.server import start_server  # Ensure this function is available
+# Synchronize GPUs and start a timer to measure performance
+accelerator.wait_for_everyone()
+start_time = time.time()
 
-# Start a local server to host model blocks
-start_server(
-    "bigscience/bloom-560m",  # Change to your model
-    block_indices=range(0, 16),  # Blocks to host (adjust as needed)
-    throughput=1,  # Adjust based on your hardware
-)
+# Generate text with multi-GPU inference
+outputs = []
 
+# Distribute prompts across available GPUs with Accelerate
+with accelerator.split_between_processes(prompts) as subset_prompts:
+    for prompt in subset_prompts:
+        input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(accelerator.device)
 
+        # Generate text from the model
+        generated_ids = model.generate(input_ids, max_new_tokens=50)  # Adjust based on context
+        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
 
-# Connect to a private swarm with multiple servers
-# Update 'initial_peers' with your server addresses or 'localhost' for local servers
-initial_peers = ["localhost:port1", "localhost:port2"]  # Adjust as needed
+        outputs.append(generated_text)
 
-# Load the distributed model from the private swarm
-model_name = "bigscience/bloom-560m"  # Change to your desired model
-tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
+# Synchronize processes after generation
+accelerator.wait_for_everyone()
 
-model = DistributedBloomForCausalLM.from_pretrained(
-    model_name,
-    client_config={"initial_peers": initial_peers}  # Connect to the private swarm
-)
+# Calculate inference time
+elapsed_time = time.time() - start_time
 
-# Generate text from a given prompt
-text = "What is the capital of France?"  # Example prompt
-inputs = tokenizer(text, return_tensors="pt", padding=True).to(torch.cuda.current_device())  # Ensure correct device
-
-# Generate output using the distributed LLM
-output = model.generate(inputs["input_ids"], max_new_tokens=50)  # Adjust max_new_tokens as needed
-generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-
-print("Generated Text:", generated_text)
-
+# Display generated outputs
+if accelerator.is_main_process:
+    print(f"Inference time: {elapsed_time:.2f} seconds")
+    print("Generated Outputs:")
+    for i, output in enumerate(outputs):
+        print(f"Prompt {i + 1}: {output}")
