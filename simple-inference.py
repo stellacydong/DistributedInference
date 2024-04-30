@@ -34,7 +34,7 @@ if tokenizer.pad_token is None:
     
 
 # Example prompts for testing
-prompts = ["Hello, world!"]
+prompts = ["what's next generation of decentralized AI?"]
 
 # Synchronize GPUs and start the timer
 accelerator.wait_for_everyone()
