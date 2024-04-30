@@ -8,7 +8,7 @@ import time
 accelerator = Accelerator()
 
 # Hugging Face authentication token is no longer used in the model constructor
-hf_token = "YOUR_HF_TOKEN"  # If needed, authenticate with Hugging Face CLI
+hf_token = "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"  # If needed, authenticate with Hugging Face CLI
 
 # Clear CUDA cache to free up GPU memory
 torch.cuda.empty_cache()
