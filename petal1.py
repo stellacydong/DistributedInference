@@ -3,6 +3,10 @@ from transformers import AutoTokenizer
 import torch
 import time
 
+import os
+os.environ['NCCL_P2P_DISABLE'] = '1'
+os.environ['NCCL_IB_DISABLE'] = '1'
+
 # Attempt to import the correct class from petals.client
 try:
     from petals.client import DistributedLlamaForCausalLM  # Try this import
