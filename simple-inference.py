@@ -24,7 +24,7 @@ print(current_device)
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map={"": current_device},  # Explicitly set the device
-    torch_dtype=torch.float16,  # Use mixed precision for efficiency
+    torch_dtype=torch.float32,  # Use mixed precision for efficiency
 )
 
 tokenizer = AutoTokenizer.from_pretrained(model_path)
@@ -45,7 +45,7 @@ with accelerator.split_between_processes(prompts) as subset_prompts:
         inputs = tokenizer(prompt, return_tensors="pt").to(current_device)
         
         # Generate text with the model
-        generated_ids = model.generate(inputs["input_ids"], max_new_tokens=500)
+        generated_ids = model.generate(inputs["input_ids"], max_new_tokens=100)
         
         # Decode the generated text
         generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
