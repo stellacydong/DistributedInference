@@ -24,7 +24,7 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,  # Use mixed precision for efficiency
 )
 
-tokenizer = AutoTokenizer.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path, padding_size="left")
 
 if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
