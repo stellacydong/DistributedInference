@@ -10,16 +10,16 @@ accelerator = Accelerator()
 # Hugging Face authentication token is no longer used in the model constructor
 hf_token = "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"  # If needed, authenticate with Hugging Face CLI
 
-# # Clear CUDA cache to free up GPU memory
-# torch.cuda.empty_cache()
+# Clear CUDA cache to free up GPU memory
+torch.cuda.empty_cache()
 
-# # Model and tokenizer initialization
-# model_path = "petals-team/StableBeluga2"  # Example model
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_path,
-#     device_map="auto",  # Let Accelerate handle device mapping
-#     torch_dtype=torch.float16,  # Adjust torch_dtype as needed
-# )
+# Model and tokenizer initialization
+model_path = "petals-team/StableBeluga2"  # Example model
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,
+    device_map="auto",  # Let Accelerate handle device mapping
+    torch_dtype=torch.float16,  # Adjust torch_dtype as needed
+)
 
 # # Tokenizer initialization without `auth_token`
 # tokenizer = AutoTokenizer.from_pretrained(model_path)
