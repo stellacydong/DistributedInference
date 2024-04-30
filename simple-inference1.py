@@ -26,7 +26,7 @@ model = AutoModelForCausalLM.from_pretrained(
     model_path,    
     device_map={"": accelerator.process_index},
     torch_dtype=torch.bfloat16,
-    use_auth_token="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"
+    token="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"
 )
 # tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
