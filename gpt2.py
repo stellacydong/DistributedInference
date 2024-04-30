@@ -13,7 +13,7 @@ print(f"Available GPUs: {gpu_count}")
 assert gpu_count >= 2, "Multi-GPU setup requires at least two GPUs."
 
 # Hugging Face token for authentication (if needed)
-hf_token = "YOUR_HF_TOKEN"  # Replace with your token if accessing gated repositories
+hf_token = "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"  # Replace with your token if accessing gated repositories
 
 # Load a pre-trained LLM and tokenizer
 model_name = "gpt2"  # Example; change to your desired model
