@@ -1,43 +1,47 @@
 import torch
 from transformers import AutoTokenizer
-from petals import DistributedBloomForCausalLM  # Example model
+from petals import DistributedBloomForCausalLM
 
-# Ensure at least two GPUs are available
-gpu_count = torch.cuda.device_count()
-assert gpu_count >= 2, "This script requires at least two GPUs."
+# Ensure PyTorch and CUDA are working correctly
+print("PyTorch version:", torch.__version__)
+print("CUDA is available:", torch.cuda.is_available())
+print("CUDA version:", torch.version.cuda)
 
-print("Available GPUs:", gpu_count)
+# Token for Hugging Face authentication
+hf_token = "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"  # Replace with your Hugging Face token
 
-try:
-    from petals.server import start_server  # Attempt to import `start_server`
-except ImportError:
-    print("Error: 'start_server' not found in 'petals.server'.")
-    print("Ensure 'petals' is installed correctly and the function is available.")
-    raise  # Rethrow the exception to indicate failure
+# Set some sample prompts for testing
+prompts = ["Example prompt 1", "Example prompt 2"]
 
-# If 'start_server' is available, start a local server
-if 'start_server' in globals():
-    # Example: Host blocks 0-15 of the 'bigscience/bloom-560m' model on a local server
-    start_server(
-        "bigscience/bloom-560m",  # Change to the desired model
-        block_indices=range(0, 16),  # Blocks to host (change as needed)
-        throughput=1,  # Server throughput; adjust based on hardware
-    )
-
-# Client code to connect to the local server
-model_name = "bigscience/bloom-560m"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# Connect to 'localhost' to use the local server
-model = DistributedBloomForCausalLM.from_pretrained(
-    model_name,
-    client_config={"initial_peers": ["localhost"]},  # Connect to the local server
+# Load the model and tokenizer
+model_path = "petals-team/StableBeluga2"
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,
+    device_map="auto",  # Automatic device mapping by Accelerate
+    torch_dtype=torch.bfloat16,  # Efficient GPU usage
+    use_auth_token=hf_token,  # Authentication for gated repositories
 )
 
-# Generate output
-text = "What's your favorite programming language?"
-inputs = tokenizer(text, return_tensors="pt")
-output = model.generate(inputs["input_ids"], max_new_tokens=50)
-result = tokenizer.decode(output[0], skip_special_tokens=True)
+tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=hf_token)
 
-print("Generated Text:", result)
+# Ensure the tokenizer has a padding token to avoid padding errors
+if tokenizer.pad_token is None:
+    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+
+# Prepare inputs for multi-GPU inference
+inputs = tokenizer(
+    prompts,
+    return_tensors="pt",
+    padding=True,
+    truncation=True,
+    max_length=50,  # Adjust as needed
+)
+
+# Ensure tensors are on the correct device
+inputs = {key: tensor.to(torch.cuda.current_device()) for key, tensor in inputs.items()}
+
+# Generate text from the model
+output = model.generate(inputs["input_ids"], max_new_tokens=50)  # Adjust as needed
+generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
+
+print("Generated Text:", generated_text)
