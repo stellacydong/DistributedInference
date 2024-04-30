@@ -21,8 +21,9 @@ from petals.client.ptune import PTuneMixin
 from petals.client.remote_generation import RemoteGenerationMixin, RemotePastKeyValues
 from petals.client.remote_sequential import RemoteSequential
 from petals.models.llama.config import DistributedLlamaConfig
+
 class DistributedLlamaModel(FromPretrainedMixin, PTuneMixin, LlamaModel):
-        return self.norm
+    return self.norm
 
 class DistributedLlamaForCausalLM(FromPretrainedMixin, RemoteGenerationMixin, LlamaForCausalLM):
     _keys_to_ignore_on_load_missing = DistributedLlamaModel._keys_to_ignore_on_load_missing
