@@ -4,8 +4,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import time, os
 
-# Set the environment variable to avoid memory fragmentation
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256"  # Adjust based on your system
+# # Set the environment variable to avoid memory fragmentation
+# os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256"  # Adjust based on your system
 
 # Clear CUDA cache to free up GPU memory
 torch.cuda.empty_cache()
@@ -20,6 +20,8 @@ print(f"Using {num_gpus} GPUs for distributed processing.")
 # Set the model and tokenizer
 model_path = "meta-llama/Llama-2-7b-hf"  # Using a smaller LLM
 current_device = torch.device(f"cuda:{accelerator.process_index}")
+
+print(current_device)
 
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
@@ -42,7 +44,7 @@ prompts_all = [
     "The story so far: in the beginning, the universe was created.",
     "It was a bright cold day in April, and the clocks were striking thirteen.",
     "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-] * 10  # Testing prompts
+] * 2  # Testing prompts
 
 # Synchronize GPUs and start the timer
 accelerator.wait_for_everyone()
