@@ -58,7 +58,7 @@ model = DistributedBloomForCausalLM.from_pretrained(
 text = "What's the best way to start learning Python?"
 inputs = tokenizer(text, return_tensors="pt")
 output = model.generate(inputs["input_ids"], max_new_tokens=50)
-result = tokenizer.decode(output[0], skip_special tokens=True)
+result = tokenizer.decode(output[0], skip_special_tokens=True)
 
 print("Generated Text:", result)
 
