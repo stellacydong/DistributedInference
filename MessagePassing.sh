@@ -3,7 +3,7 @@ export NCCL_IB_DISABLE="1"
 
 # Set the correct number of processes and machines
 accelerate launch \
-  --num_processes 1 \
+  --num_processes 8 \
   --num_machines 1 \
   --mixed_precision "no" \
   PytorchDistributedParallel/MessagePassing.py
