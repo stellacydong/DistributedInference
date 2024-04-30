@@ -1,11 +1,8 @@
 # Python script: simple-inference.py
 from accelerate import Accelerator
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch  # Ensure torch is imported
+import torch  # Import torch to interact with CUDA
 import time
-
-# Clear CUDA cache to avoid memory issues
-torch.cuda.empty_cache()
 
 # Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
@@ -17,11 +14,16 @@ num_gpus = torch.cuda.device_count()  # Check the number of available GPUs
 print(f"Using {num_gpus} GPUs for distributed processing.")
 
 # Load the model and tokenizer
+# Determine the current device for this process
+current_device = torch.device(f"cuda:{accelerator.process_index}")
+
+# Set the model to use the correct device
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
-    device_map=accelerator.device_map,  # Let Accelerator handle device mapping
+    device_map={"": current_device},  # Explicitly set the device
     torch_dtype=torch.float16,  # Use mixed precision for efficiency
 )
+
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 # Example prompts for testing
@@ -31,14 +33,12 @@ prompts = ["Hello, world!", "What's your favorite movie?"]
 accelerator.wait_for_everyone()
 start_time = time.time()
 
-# Initialize a list to store outputs
+# Distribute prompts across GPUs and gather results
 outputs = []
-
-# Distribute prompts across available GPUs
 with accelerator.split_between_processes(prompts) as subset_prompts:
     for prompt in subset_prompts:
         # Tokenize and move inputs to the correct device
-        inputs = tokenizer(prompt, return_tensors="pt").to(accelerator.device)
+        inputs = tokenizer(prompt, return_tensors="pt").to(current_device)
         
         # Generate text with the model
         generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
@@ -51,10 +51,10 @@ with accelerator.split_between_processes(prompts) as subset_prompts:
 # Synchronize processes before outputting results
 accelerator.wait_for_everyone()
 
-# Calculate inference time
+# Calculate the time taken for inference
 elapsed_time = time.time() - start_time
 
-# Output results only if in the main process
+# Display results if in the main process
 if accelerator.is_main_process:
     print(f"Inference completed in {elapsed_time:.2f} seconds.")
     print("Generated Outputs:")
