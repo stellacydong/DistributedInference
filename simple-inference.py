@@ -15,7 +15,7 @@ hf_token = "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"
 prompts = ["Example prompt 1", "Example prompt 2"]  # Change as needed
 
 # Load a model and tokenizer with the token
-model_path = "mistralai/Mistral-7B-Instruct-v0.2"  # Example model; ensure you have access
+model_path = "petals-team/StableBeluga2"  # Example model; ensure you have access
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map="auto",  # Let the model map devices automatically
