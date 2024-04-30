@@ -1,10 +1,24 @@
+# compute_environment: LOCAL_MACHINE
+# distributed_type: MULTI_GPU
+# num_processes: 8  # Number of GPUs or processes to use
+# num_machines: 1
+# mixed_precision: no
+# # machine_rank: 0  # Rank of the machine in a multi-machine setup
+# use_cpu: False
+# fp16: False  # Use full precision or half precision
+# bf16: True  # Use bfloat16 for mixed precision
+# use torch.distributed.launch for distributed training
+# device placement: AUTO
+# use torch.cuda.set_device
+
 compute_environment: LOCAL_MACHINE
 distributed_type: MULTI_GPU
 num_processes: 8  # Number of GPUs or processes to use
 num_machines: 1
-mixed_precision: no
-# machine_rank: 0  # Rank of the machine in a multi-machine setup
-use_cpu: False
-fp16: False  # Use full precision or half precision
+machine_rank: 0  # Rank of the machine in a multi-machine setup
+mixed_precision: no  # Choose 'no' for full precision, 'fp16' for half precision, or 'bf16' for bfloat16
+fp16: False  # Use half precision (floating-point 16) if True
 bf16: True  # Use bfloat16 for mixed precision
-
+use_cpu: False  # Set to True if using CPUs instead of GPUs
+use_torch_distributed: True  # Enable distributed training with torch.distributed
+device_placement: AUTO  # Automatically assign devices
