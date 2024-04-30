@@ -1,27 +1,23 @@
 from accelerate import Accelerator
-from accelerate.utils import gather_object
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import time
 
-# Initialize Accelerator for distributed setup
+# Initialize Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
-# Sample prompts for testing
-prompts = [
-    "The King is dead. Long live the Queen.",
-    "It was a bright cold day in April, and the clocks were striking thirteen.",
-] * 10
+# Token for Hugging Face authentication (replace 'YOUR_TOKEN' with your actual token)
+hf_token = "YOUR_TOKEN"
 
-# Token for authentication (replace 'YOUR_TOKEN' with your actual Hugging Face token)
-hf_token = "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"
+# Set some sample prompts for testing
+prompts = ["Example prompt 1", "Example prompt 2"]  # Change as needed
 
-# Load a model and tokenizer with the token for accessing a gated repo
-model_path = "meta-llama/Llama-2-7b-hf"
+# Load a model and tokenizer with the token
+model_path = "meta-llama/Llama-2-7b-hf"  # Example model; ensure you have access
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
-    device_map="auto",
-    torch_dtype=torch.bfloat16,
-    use_auth_token=hf_token,  # Use the token for authentication
+    device_map="auto",  # Let the model map devices automatically
+    torch_dtype=torch.bfloat16,  # Adjust torch_dtype as needed
+    token=hf_token  # Use your Hugging Face token for authentication
 )
-tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=hf_token)
+tokenizer = AutoTokenizer.from_pretrained(model_path, token=hf_token)
