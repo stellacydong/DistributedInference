@@ -4,6 +4,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from statistics import mean
 import torch, time, json
 
+# Clear CUDA cache to free up GPU memory
+torch.cuda.empty_cache()
+
 accelerator = Accelerator()
 
 # 10*10 Prompts. Source: https://www.penguin.co.uk/articles/2022/04/best-first-lines-in-books
