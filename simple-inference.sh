@@ -1,3 +1,5 @@
+python3 -m pip install transformers accelerate torch bitsandbytes
+
 export NCCL_P2P_DISABLE="1"
 export NCCL_IB_DISABLE="1"
 
