@@ -13,7 +13,7 @@
 
 compute_environment: LOCAL_MACHINE
 distributed_type: MULTI_GPU
-num_processes: 2 # Number of GPUs or processes to use
+num_processes: 8 # Number of GPUs or processes to use
 num_machines: 1
 machine_rank: 7  # Rank of the machine in a multi-machine setup
 mixed_precision: no  # Choose 'no' for full precision, 'fp16' for half precision, or 'bf16' for bfloat16
