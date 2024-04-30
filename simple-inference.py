@@ -30,7 +30,7 @@ model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 # Example prompts for testing
-prompts = ["Hello, world!", "What's your favorite movie?", "Tell me a story."]
+prompts = ["Hello, world!", "What's next generation of decentralized AI?"]
 
 # Synchronize GPUs and start the timer
 accelerator.wait_for_everyone()
