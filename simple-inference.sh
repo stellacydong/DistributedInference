@@ -22,7 +22,7 @@ accelerate launch \
   --num_processes 8 \
   --num_machines 1 \
   --mixed_precision "no" \
-  -distributed_type "multi-GPU"
+  -distributed_type "multi-GPU" \
   PytorchDistributedParallel/simple-inference.py
 
   
