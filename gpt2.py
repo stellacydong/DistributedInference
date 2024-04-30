@@ -21,8 +21,8 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.float16,  # Adjust torch_dtype as needed
 )
 
-# Tokenizer initialization without `auth_token`
-tokenizer = AutoTokenizer.from_pretrained(model_path)
+# # Tokenizer initialization without `auth_token`
+# tokenizer = AutoTokenizer.from_pretrained(model_path)
 
 # # Ensure the tokenizer has a padding token
 # if tokenizer.pad_token is None:
