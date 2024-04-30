@@ -46,7 +46,7 @@ with accelerator.split_between_processes(prompts) as subset_prompts:
         
         # Generate text with the model
         # generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
-        generated_ids = model.generate(**encodings, pad_token_id=tokenizer.pad_token_id, max_new_tokens=200)
+        generated_ids = model.generate(pad_token_id=tokenizer.pad_token_id, max_new_tokens=50)
         
         # Decode the generated text
         generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
