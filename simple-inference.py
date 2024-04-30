@@ -3,6 +3,8 @@ from accelerate import Accelerator
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch  # Import torch to interact with CUDA
 import time
+import logging
+logging.getLogger('transformers').setLevel(logging.ERROR)
 
 # Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
