@@ -13,7 +13,7 @@ hf_token = "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"
 prompts = ["Example prompt 1", "Example prompt 2"]  # Change as needed
 
 # Load a model and tokenizer with the token
-model_path = "meta-llama/Llama-2-7b-hf"  # Example model; ensure you have access
+model_path = "bigscience/bloom-560m"  # Example model; ensure you have access
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map="auto",  # Let the model map devices automatically
@@ -21,3 +21,5 @@ model = AutoModelForCausalLM.from_pretrained(
     token=hf_token  # Use your Hugging Face token for authentication
 )
 tokenizer = AutoTokenizer.from_pretrained(model_path, token=hf_token)
+
+
