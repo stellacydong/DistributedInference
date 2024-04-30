@@ -6,4 +6,4 @@ accelerate launch \
   --num_processes 1 \
   --num_machines 1 \
   --mixed_precision "no" \
-  simple-inference.py
+  PytorchDistributedParallel/simple-inference.py
