@@ -1,22 +1,17 @@
 import torch
 from transformers import AutoTokenizer
-from petals import DistributedBloomForCausalLM  # Or another model from Petals
+from petals import DistributedBloomForCausalLM  # Or another Petals-supported model
 
-# Check available GPUs
+# Ensure at least two GPUs are available
 assert torch.cuda.device_count() >= 2, "This script requires at least two GPUs."
 
-# Set device IDs for the GPUs you want to use
-gpu1 = torch.device("cuda:0")  # First GPU
-gpu2 = torch.device("cuda:1")  # Second GPU
-
 # Load tokenizer
-model_name = "bigscience/bloom-560m"  # Example model name
+model_name = "bigscience/bloom-560m"  # Example model name; replace with your model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Load model with Petals, specifying the desired devices
-model = DistributedBloomForCausalLM.from_pretrained(
-    model_name, torch_dtype=torch.float16, device_map={"0": gpu1, "1": gpu2}
-)
+# Load the model in distributed mode without manually specifying the device map
+# Let Petals handle the distribution of layers across available GPUs/nodes
+model = DistributedBloomForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
 
 # Sample input
 text = "Hello, world! How is it going?"
