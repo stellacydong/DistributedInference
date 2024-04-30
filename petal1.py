@@ -7,11 +7,33 @@ import os
 os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ['NCCL_IB_DISABLE'] = '1'
 
-# Attempt to import the correct class from petals.client
-try:
-    from petals.client import DistributedLlamaForCausalLM  # Try this import
-except ImportError:
-    print("Error importing 'DistributedLlamaForCausalLM'. Please check your petals installation.")
+
+from typing import Optional
+import hivemind
+import torch
+import torch.nn as nn
+from hivemind.utils.logging import get_logger
+from transformers.modeling_outputs import BaseModelOutputWithPast
+from transformers.models.llama import LlamaForCausalLM, LlamaForSequenceClassification, LlamaModel, LlamaPreTrainedModel
+from petals.client.from_pretrained import FromPretrainedMixin
+from petals.client.lm_head import LMHead
+from petals.client.ptune import PTuneMixin
+from petals.client.remote_generation import RemoteGenerationMixin, RemotePastKeyValues
+from petals.client.remote_sequential import RemoteSequential
+from petals.models.llama.config import DistributedLlamaConfig
+class DistributedLlamaModel(FromPretrainedMixin, PTuneMixin, LlamaModel):
+        return self.norm
+
+class DistributedLlamaForCausalLM(FromPretrainedMixin, RemoteGenerationMixin, LlamaForCausalLM):
+    _keys_to_ignore_on_load_missing = DistributedLlamaModel._keys_to_ignore_on_load_missing
+    _keys_to_ignore_on_load_unexpected = DistributedLlamaModel._keys_to_ignore_on_load_unexpected
+
+
+# # Attempt to import the correct class from petals.client
+# try:
+#     from petals.client import DistributedLlamaForCausalLM  # Try this import
+# except ImportError:
+#     print("Error importing 'DistributedLlamaForCausalLM'. Please check your petals installation.")
 
 # Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
