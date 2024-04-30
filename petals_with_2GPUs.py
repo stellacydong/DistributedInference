@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoTokenizer
-from petals import DistributedBloomForCausalLM  # Or another Petals-supported model
+from petals import DistributedBloomForCausalLM
 
 # Ensure at least two GPUs are available
 assert torch.cuda.device_count() >= 2, "This script requires at least two GPUs."
@@ -9,17 +9,19 @@ assert torch.cuda.device_count() >= 2, "This script requires at least two GPUs."
 model_name = "bigscience/bloom-560m"  # Example model name; replace with your model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Load the model in distributed mode without manually specifying the device map
-# Let Petals handle the distribution of layers across available GPUs/nodes
+# Load the distributed model
 model = DistributedBloomForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
 
-# Sample input
+# Sample input text
 text = "Hello, world! How is it going?"
 
-# Tokenize and generate output
+# Tokenize the input
 inputs = tokenizer(text, return_tensors="pt")
-output = model.generate(inputs["input_ids"])
 
-# Decode output
+# Set either max_length or max_new_tokens
+# Here, we'll specify max_new_tokens to control the number of new tokens generated
+output = model.generate(inputs["input_ids"], max_new_tokens=20)  # Adjust as needed
+
+# Decode the output to text
 result = tokenizer.decode(output[0], skip_special_tokens=True)
 print("Output:", result)
