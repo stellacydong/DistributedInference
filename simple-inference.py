@@ -7,7 +7,7 @@ import time
 accelerator = Accelerator()
 
 # Token for Hugging Face authentication (replace 'YOUR_TOKEN' with your actual token)
-hf_token = "YOUR_TOKEN"
+hf_token = "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"
 
 # Set some sample prompts for testing
 prompts = ["Example prompt 1", "Example prompt 2"]  # Change as needed
