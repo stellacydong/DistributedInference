@@ -6,23 +6,24 @@
 # export NCCL_IB_DISABLE="1"
 
 
-accelerate config
+# accelerate config
 
-#!/bin/bash
-ACCELERATE_CONFIG_PATH="$HOME/.cache/huggingface/accelerate/default_config.yaml"
+# #!/bin/bash
+# ACCELERATE_CONFIG_PATH="$HOME/.cache/huggingface/accelerate/default_config.yaml"
 
-# Set configuration for single-machine multi-GPU setup
-cat > "$ACCELERATE_CONFIG_PATH" << EOF
-compute_environment: LOCAL_MACHINE
-distributed_type: MULTI_GPU
-mixed_precision: no
-num_processes: 8
-num_machines: 1
-use_cpu: False
-EOF
+# # Set configuration for single-machine multi-GPU setup
+# cat > "$ACCELERATE_CONFIG_PATH" << EOF
+# compute_environment: LOCAL_MACHINE
+# distributed_type: MULTI_GPU
+# mixed_precision: no
+# num_processes: 8
+# num_machines: 1
+# use_cpu: False
+# EOF
 
 echo "Accelerate configuration created at $ACCELERATE_CONFIG_PATH"
 
+export ACCELERATE_CONFIG=PytorchDistributedParallel/accelerate_config.yaml
 
 
 # Run a multi-GPU script with Accelerate
