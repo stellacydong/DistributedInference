@@ -1,78 +1,62 @@
 from accelerate import Accelerator
+from accelerate.utils import gather_object
 from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-import time
+from statistics import mean
+import torch, time, json
 
-# Clear CUDA cache to free up GPU memory
-torch.cuda.empty_cache()
-
-# Initialize Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
-# Token for Hugging Face authentication (replace with your token)
-hf_token = "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"
+# 10*10 Prompts. Source: https://www.penguin.co.uk/articles/2022/04/best-first-lines-in-books
+prompts_all=[
+    "The King is dead. Long live the Queen.",
+    "Once there were four children whose names were Peter, Susan, Edmund, and Lucy.",
+    "The story so far: in the beginning, the universe was created.",
+    "It was a bright cold day in April, and the clocks were striking thirteen.",
+    "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
+    "The sweat wis lashing oafay Sick Boy; he wis trembling.",
+    "124 was spiteful. Full of Baby's venom.",
+    "As Gregor Samsa awoke one morning from uneasy dreams he found himself transformed in his bed into a gigantic insect.",
+    "I write this sitting in the kitchen sink.",
+    "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
+] * 10
 
-# Set some sample prompts for testing
-prompts = ["Example prompt 1", "Example prompt 2"]  # Change as needed
-
-# Load the model and tokenizer with authentication
-model_path = "petals-team/StableBeluga2"  # Example model; ensure you have access
+# load a base model and tokenizer
+model_path = "meta-llama/Llama-2-7b-hf"
 model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    device_map="auto",  # Automatic device mapping by Accelerate
-    torch_dtype=torch.bfloat16,  # Efficient GPU usage
-    use_auth_token=hf_token,  # Authentication for gated repositories
+    model_path,    
+    device_map={"": accelerator.process_index},
+    torch_dtype=torch.bfloat16,
 )
+tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
-tokenizer = AutoTokenizer.from_pretrained(
-    model_path, use_auth_token=hf_token
-)
-
-# Ensure the tokenizer has a padding token to avoid padding errors
-if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})  # Add a padding token
-
-# Prepare input for multi-GPU inference
-inputs = tokenizer(
-    prompts,
-    return_tensors="pt",
-    padding=True,  # Ensure proper padding
-    truncation=True,  # Ensure proper truncation
-    max_length=50  # Adjust as needed
-)
-
-# Move input tensors to the correct device to avoid device mismatch errors
-inputs = {key: tensor.to(accelerator.device) for key, tensor in inputs.items()}
-
-# Synchronize GPUs and start a timer for measuring performance
+# sync GPUs and start the timer
 accelerator.wait_for_everyone()
-start_time = time.time()
+start=time.time()
 
-# Generate text using multi-GPU inference
-outputs = []
+# divide the prompt list onto the available GPUs 
+with accelerator.split_between_processes(prompts_all) as prompts:
+    # store output of generations in dict
+    results=dict(outputs=[], num_tokens=0)
 
-# Distribute prompts across GPUs using Accelerate
-with accelerator.split_between_processes(prompts) as subset_prompts:
-    for prompt in subset_prompts:
-        input_ids = tokenizer(prompt, return_tensors="pt").input_ids.to(accelerator.device)  # Ensure the correct device
-        
-        # Generate text from the model
-        generated_ids = model.generate(input_ids, max_new_tokens=50)  # Adjust as needed
-        
-        # Ensure the generated output is on the same device to avoid device mismatch
-        generated_text = tokenizer.decode(generated_ids[0].to(accelerator.device), skip_special_tokens=True)
-        
-        outputs.append(generated_text)
+    # have each GPU do inference, prompt by prompt
+    for prompt in prompts:
+        prompt_tokenized=tokenizer(prompt, return_tensors="pt").to("cuda")
+        output_tokenized = model.generate(**prompt_tokenized, max_new_tokens=100)[0]
 
-# Synchronize processes after generation to avoid issues with data collection
-accelerator.wait_for_everyone()
+        # remove prompt from output 
+        output_tokenized=output_tokenized[len(prompt_tokenized["input_ids"][0]):]
 
-# Calculate the elapsed time
-elapsed_time = time.time() - start_time
+        # store outputs and number of tokens in result{}
+        results["outputs"].append( tokenizer.decode(output_tokenized) )
+        results["num_tokens"] += len(output_tokenized)
 
-# Display generated outputs
+    results=[ results ] # transform to list, otherwise gather_object() will not collect correctly
+
+# collect results from all the GPUs
+results_gathered=gather_object(results)
+
 if accelerator.is_main_process:
-    print(f"Inference time: {elapsed_time:.2f} seconds")
-    print("Generated Outputs:")
-    for i, output in enumerate(outputs):
-        print(f"Prompt {i + 1}: {output}")
+    timediff=time.time()-start
+    num_tokens=sum([r["num_tokens"] for r in results_gathered ])
+
+    print(f"tokens/sec: {num_tokens//timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
