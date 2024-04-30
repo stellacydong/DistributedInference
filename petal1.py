@@ -142,6 +142,12 @@ from typing import Optional
 os.environ['NCCL_P2P_DISABLE'] = '1'
 os.environ['NCCL_IB_DISABLE'] = '1'
 
+# Set the environment variable to avoid memory fragmentation
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256"  # Adjust based on your system
+
+# Clear CUDA cache to free up GPU memory
+torch.cuda.empty_cache()
+
 # Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
