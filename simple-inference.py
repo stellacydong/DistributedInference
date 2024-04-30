@@ -3,6 +3,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 import time
 
+torch.cuda.empty_cache()
+
 # Initialize Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
