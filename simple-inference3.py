@@ -18,16 +18,16 @@ prompts_all=[
     "As Gregor Samsa awoke one morning from uneasy dreams he found himself transformed in his bed into a gigantic insect.",
     "I write this sitting in the kitchen sink.",
     "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
-] * 10
+] * 5
 
-# # load a base model and tokenizer
-# model_path = "meta-llama/Llama-2-7b-hf"
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_path,    
-#     device_map={"": accelerator.process_index},
-#     torch_dtype=torch.bfloat16,
-# )
-# tokenizer = AutoTokenizer.from_pretrained(model_path)   
+# load a base model and tokenizer
+model_path = "meta-llama/Llama-2-7b-hf"
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,    
+    device_map={"": accelerator.process_index},
+    torch_dtype=torch.bfloat16,
+)
+tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
 # # sync GPUs and start the timer
 # accelerator.wait_for_everyone()
