@@ -1,67 +1,51 @@
+# Python script: simple-inference.py
 from accelerate import Accelerator
-from accelerate.utils import gather_object
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from statistics import mean
-import torch, time, json
+from torch import cuda
+import time
 
-
-# Clear CUDA cache to free up memory
-torch.cuda.empty_cache()
-
-
+# Initialize the Accelerator for multi-GPU setup
 accelerator = Accelerator()
 
-# 10*10 Prompts. Source: https://www.penguin.co.uk/articles/2022/04/best-first-lines-in-books
-prompts_all=[
-    "The King is dead. Long live the Queen.",
-    "Once there were four children whose names were Peter, Susan, Edmund, and Lucy.",
-    "The story so far: in the beginning, the universe was created.",
-    "It was a bright cold day in April, and the clocks were striking thirteen.",
-    "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-    "The sweat wis lashing oafay Sick Boy; he wis trembling.",
-    "124 was spiteful. Full of Baby's venom.",
-    "As Gregor Samsa awoke one morning from uneasy dreams he found himself transformed in his bed into a gigantic insect.",
-    "I write this sitting in the kitchen sink.",
-    "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
-] * 1
+# GPT-2 Small model with 124M parameters
+model_path = "gpt2"  # Using the smallest GPT-2 model
+num_gpus = cuda.device_count()  # Check available GPUs
 
-# load a base model and tokenizer
-model_path = "meta-llama/Llama-2-7b-hf"
+print(f"Using {num_gpus} GPUs for distributed processing.")
+
+# Initialize the model and tokenizer
 model = AutoModelForCausalLM.from_pretrained(
-    model_path,    
+    model_path,
     device_map={"": accelerator.process_index},
-    torch_dtype=torch.bfloat16,
+    torch_dtype=torch.float16  # Use mixed precision for efficiency
 )
-tokenizer = AutoTokenizer.from_pretrained(model_path)   
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 
-# sync GPUs and start the timer
+# Example prompts for testing
+prompts = ["Hello, world!", "What's your favorite movie?"]  # Add your prompts
+
+# Synchronize GPUs and start the timer
 accelerator.wait_for_everyone()
-start=time.time()
+start_time = time.time()
 
-# divide the prompt list onto the available GPUs 
-with accelerator.split_between_processes(prompts_all) as prompts:
-    # store output of generations in dict
-    results=dict(outputs=[], num_tokens=0)
+# Distribute prompts across GPUs and gather results
+outputs = []
+with accelerator.split_between_processes(prompts) as subset_prompts:
+    for prompt in subset_prompts:
+        inputs = tokenizer(prompt, return_tensors="pt").to(accelerator.device)
+        generated_ids = model.generate(inputs["input_ids"], max_new_tokens=50)
+        generated_text = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+        outputs.append(generated_text)
 
-    # have each GPU do inference, prompt by prompt
-    for prompt in prompts:
-        prompt_tokenized=tokenizer(prompt, return_tensors="pt").to("cuda")
-        output_tokenized = model.generate(**prompt_tokenized, max_new_tokens=100)[0]
+# Wait for all processes to finish
+accelerator.wait_for_everyone()
 
-        # remove prompt from output 
-        output_tokenized=output_tokenized[len(prompt_tokenized["input_ids"][0]):]
+# Calculate the time taken for inference
+elapsed_time = time.time() - start_time
 
-        # store outputs and number of tokens in result{}
-        results["outputs"].append( tokenizer.decode(output_tokenized) )
-        results["num_tokens"] += len(output_tokenized)
-
-    results=[ results ] # transform to list, otherwise gather_object() will not collect correctly
-
-# collect results from all the GPUs
-results_gathered=gather_object(results)
-
+# Display results if in the main process
 if accelerator.is_main_process:
-    timediff=time.time()-start
-    num_tokens=sum([r["num_tokens"] for r in results_gathered ])
-
-    print(f"tokens/sec: {num_tokens//timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
+    print(f"Inference completed in {elapsed_time:.2f} seconds.")
+    print("Generated Outputs:")
+    for i, output in enumerate(outputs):
+        print(f"Output {i + 1}: {output}")
