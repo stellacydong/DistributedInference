@@ -17,34 +17,34 @@
 
 echo "Setting up Accelerate configuration..."
 
-# # Set the correct number of processes and machines
-# accelerate launch \
-#   --num_processes 8 \
-#   --num_machines 1 \
-#   --mixed_precision "no" \
-#   -distributed_type "multi-GPU" \
-#   PytorchDistributedParallel/simple-inference.py
+# Set the correct number of processes and machines
+accelerate launch \
+  --num_processes 8 \
+  --num_machines 1 \
+  --mixed_precision "no" \
+  -distributed_type "multi-GPU" \
+  PytorchDistributedParallel/simple-inference.py
 
 #!/bin/bash
 
-# Set the file path for the Accelerate configuration
-ACCELERATE_CONFIG_PATH="$HOME/.cache/huggingface/accelerate/default_config.yaml"
+# # Set the file path for the Accelerate configuration
+# ACCELERATE_CONFIG_PATH="$HOME/.cache/huggingface/accelerate/default_config.yaml"
 
-# Create the configuration for a single-machine multi-GPU setup
-echo "Creating Accelerate configuration..."
+# # Create the configuration for a single-machine multi-GPU setup
+# echo "Creating Accelerate configuration..."
 
-cat > "$ACCELERATE_CONFIG_PATH" << EOF
-compute_environment: LOCAL_MACHINE
-distributed_type: MULTI_GPU
-mixed_precision: no
-num_processes: 8
-num_machines: 1
-use_cpu: False
-EOF
+# cat > "$ACCELERATE_CONFIG_PATH" << EOF
+# compute_environment: LOCAL_MACHINE
+# distributed_type: MULTI_GPU
+# mixed_precision: no
+# num_processes: 8
+# num_machines: 1
+# use_cpu: False
+# EOF
 
-echo "Accelerate configuration created at $ACCELERATE_CONFIG_PATH"
+# echo "Accelerate configuration created at $ACCELERATE_CONFIG_PATH"
 
-accelerate launch PytorchDistributedParallel/simple-inference.py
+# accelerate launch PytorchDistributedParallel/simple-inference.py
   
 # accelerate config 
 
@@ -59,4 +59,4 @@ accelerate launch PytorchDistributedParallel/simple-inference.py
 
 echo "Launching multi-GPU script with Accelerate..."
 # Replace 'simple-inference.py' with the name of your Python script
-accelerate launch simple-inference.py
+# accelerate launch simple-inference.py
