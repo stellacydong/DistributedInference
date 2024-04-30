@@ -19,6 +19,8 @@ print(f"Using {num_gpus} GPUs for distributed processing.")
 # Load the model and tokenizer
 current_device = torch.device(f"cuda:{accelerator.process_index}")
 
+print(current_device)
+
 model = AutoModelForCausalLM.from_pretrained(
     model_path,
     device_map={"": current_device},  # Explicitly set the device
