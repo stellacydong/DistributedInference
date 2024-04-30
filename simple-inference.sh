@@ -30,7 +30,7 @@ echo "Launching multi-GPU script with Accelerate..."
 accelerate launch PytorchDistributedParallel/simple-inference.py  # Replace with your script name
 
 
-python3 -m pip install --upgrade accelerate
+# python3 -m pip install --upgrade accelerate
 
 
 # # # Set the correct number of processes and machines
