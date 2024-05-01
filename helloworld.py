@@ -17,5 +17,4 @@ def hello_world():
 
 notebook_launcher(hello_world, num_processes=5)  
 
-print('\n ******** ') 
 
