@@ -74,7 +74,7 @@ def hello_world():
     model = transformers.AutoModelForCausalLM.from_pretrained(
     model_path,
     trust_remote_code="true",
-    torch_dtype=fp_type,
+    torch_dtype=torch.bfloat16,,
     device_map= None,
     # token=HF_TOKEN,
     use_auth_token="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")
