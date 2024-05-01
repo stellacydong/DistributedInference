@@ -1,4 +1,5 @@
-
+import torch 
+torch.cuda.empty_cache()
 
 from accelerate import notebook_launcher
 import transformers
