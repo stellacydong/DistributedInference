@@ -1,4 +1,5 @@
-
+import torch 
+torch.cuda.empty_cache()
 
 #  Multi-GPU text-generation
 # load a model on each GPU
