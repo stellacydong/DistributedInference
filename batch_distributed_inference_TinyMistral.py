@@ -1,3 +1,6 @@
+import torch 
+torch.cuda.empty_cache()
+
 # Generate while training Multi-GPUs
 
 # This one adds a bit more, here we train a tiny LLM and see how it's output changes during training. These are the steps:
