@@ -7,7 +7,7 @@
 import pandas as pd
 import numpy as np
 
-
+from IPython import get_ipython
 
 imdb_df = pd.read_csv('PytorchDistributedParallel/IMDB_Dataset.csv', index_col = None)
 
