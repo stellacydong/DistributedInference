@@ -1,13 +1,21 @@
-from accelerate import Accelerator
-from accelerate.utils import gather_object
+# part 1 
+# simplest example: create strings on each GPU and collect them using gather_object()
+# change num_processes to the number of GPUs in your system
 
-accelerator = Accelerator()
+from accelerate import notebook_launcher
 
-# each GPU creates a string
-message=[ f"Hello this is GPU {accelerator.process_index}" ] 
+def hello_world():
+    from accelerate import Accelerator
+    from accelerate.utils import gather_object
 
-# collect the messages from all GPUs
-messages=gather_object(message)
+    accelerator = Accelerator()
 
-# output the messages only on the main process with accelerator.print() 
-accelerator.print(messages)
+    message= [f"Hello this is GPU {accelerator.process_index}"]
+    messages=gather_object(message)
+
+    accelerator.print(messages)
+
+notebook_launcher(hello_world, num_processes=5)  
+
+print('\n ******** ') 
+
