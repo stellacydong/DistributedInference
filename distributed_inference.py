@@ -75,7 +75,7 @@ def hello_world():
     model_path,
     torch_dtype=torch.bfloat16,
     device_map={"": accelerator.process_index},
-    use_auth_token="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")
+    token="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")
 
     tokenizer = AutoTokenizer.from_pretrained(
     model_path, 
