@@ -23,6 +23,7 @@ import sys
 sys.path.insert(1, '/DistributedInference')
 import utils
 
+sys.path.insert(1, '/DistributedInference')
 from arguments import AveragerArguments, BaseTrainingArguments, OptimizerArguments
 
 use_hivemind_log_handler("in_root_logger")
