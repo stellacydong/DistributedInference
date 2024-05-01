@@ -42,6 +42,7 @@ print('\n ******** ')
 
 
 from accelerate import notebook_launcher
+import transformers
 
 def hello_world():
     from accelerate import Accelerator
