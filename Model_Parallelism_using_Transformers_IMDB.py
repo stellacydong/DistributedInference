@@ -9,7 +9,7 @@ import numpy as np
 
 
 
-imdb_df = pd.read_csv('IMDB_Dataset.csv', index_col = None)
+imdb_df = pd.read_csv('PytorchDistributedParallel/IMDB_Dataset.csv', index_col = None)
 
 
 #imdb_df.head(3)
