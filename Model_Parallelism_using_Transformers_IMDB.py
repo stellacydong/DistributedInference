@@ -168,180 +168,143 @@ loss_fn = torch.nn.CrossEntropyLoss().to('cuda:1')
 print(loss_fn)
 
 
-#def train_model(model, data_loader, loss_fn, optimizer, scheduler, n_examples):
-#    model = model.train()
-#    losses = []
-#    correct_predictions = 0
-#    
-#    for d in data_loader:
-#        input_ids = d['input_ids']
-#        attention_mask = d['attention_mask']
-#        reshaped_attention_mask = attention_mask.reshape(d['attention_mask'].shape[0], 1, 1, d['attention_mask'].shape[1])
-#        targets = d['labels']
-#        
-#        outputs= model(input_ids = input_ids, attention_mask = reshaped_attention_mask)
-#        _, preds = torch.max(outputs, dim = 1)
-#        loss = loss_fn(outputs, targets.to('cuda:1'))
-#        
-#        correct_predictions += torch.sum(preds == targets.to('cuda:1'))
-#        losses.append(loss.item())
-#        
-#        loss.backward()
-#        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1.0)
-#        optimizer.step()
-#        scheduler.step()
-#        optimizer.zero_grad()
-#        
-#    return correct_predictions.double() / n_examples, np.mean(losses)
-#        
-#
-#
-## In[ ]:
-#
-#
-#def eval_model(model, data_loader, loss_fn, n_examples):
-#    model = model.eval()
-#    losses = []
-#    correct_predictions = 0
-#    
-#    with torch.no_grad():
-#        for d in data_loader:
-#            input_ids = d['input_ids']
-#            attention_mask = d['attention_mask']
-#            reshaped_attention_mask = attention_mask.reshape(d['attention_mask'].shape[0], 1, 1, d['attention_mask'].shape[1])
-#            targets = d['labels']
-#            
-#            outputs = model(input_ids = input_ids, attention_mask = reshaped_attention_mask)
-#            _, preds = torch.max(outputs, dim = 1)
-#            
-#            loss = loss_fn(outputs, targets.to('cuda:1'))
-#            
-#            correct_predictions += torch.sum(preds == targets.to('cuda:1'))
-#            losses.append(loss.item())
-#            
-#        return correct_predictions.double() / n_examples, np.mean(losses)
-#
-#
-## In[ ]:
-#
-#
-#from collections import defaultdict
-#
-#history = defaultdict(list)
-#best_accuracy = 0
-#
-#
-## In[ ]:
-#
-#
-#get_ipython().run_cell_magic('time', '', "\nfor epoch in range(EPOCHS):\n    print(f'Epoch {epoch + 1}/{EPOCHS}')\n    print('-' * 10)\n    \n    train_acc, train_loss = train_model(multi_gpu_roberta, train_data_loader, loss_fn, optimizer, scheduler, len(df_train))\n    print(f'Train Loss: {train_loss} ; Train Accuracy: {train_acc}')\n    \n    val_acc, val_loss = eval_model(multi_gpu_roberta, val_data_loader, loss_fn, len(df_val))\n    print(f'Val Loss: {val_loss} ; Val Accuracy: {val_acc}')\n    \n    print()\n    \n    history['train_acc'].append(train_acc)\n    history['train_loss'].append(train_loss)\n    history['val_acc'].append(val_acc)\n    history['val_loss'].append(val_loss)\n    \n    if val_acc > best_accuracy:\n        torch.save(multi_gpu_roberta.state_dict(), 'multi_gpu_roberta_best_model_state.bin')\n        best_acc = val_acc\n")
-#
-#
-## In[ ]:
-#
-#
-#import matplotlib.pyplot as plt
-#
-#
-## In[ ]:
-#
-#
-#plt.plot(history['train_acc'], label='train accuracy')
-#plt.plot(history['val_acc'], label='validation accuracy')
-#plt.title('Training history')
-#plt.ylabel('Accuracy')
-#plt.xlabel('Epoch')
-#plt.legend()
-#plt.ylim([0, 1]);
-#
-#
-## In[ ]:
-#
-#
-#def get_predictions(model, data_loader):
-#    model = model.eval()
-#    review_texts = []
-#    predictions = []
-#    prediction_probs = []
-#    real_values = []
-#    with torch.no_grad():
-#        
-#        for d in data_loader:
-#
-#            texts = d["review_text"]
-#            input_ids = d["input_ids"]
-#            attention_mask = d["attention_mask"]
-#            labels = d["labels"]
-#
-#            outputs = model(input_ids=input_ids,
-#                            attention_mask=attention_mask)
-#
-#            _, preds = torch.max(outputs, dim=1)
-#            review_texts.extend(texts)
-#            predictions.extend(preds)
-#            prediction_probs.extend(outputs)
-#            real_values.extend(labels)
-#        predictions = torch.stack(predictions).cpu()
-#        prediction_probs = torch.stack(prediction_probs).cpu()
-#        real_values = torch.stack(real_values).cpu()
-#    return review_texts, predictions, prediction_probs, real_values
-#
-#
-## In[ ]:
-#
-#
-#y_review_texts, y_pred, y_pred_probs, y_test = get_predictions(multi_gpu_roberta, val_data_loader)
-#
-#
-## In[ ]:
-#
-#
-#from sklearn.metrics import classification_report, confusion_matrix
-#import seaborn as sns
-#
-#
-## In[ ]:
-#
-#
-#class_names = ['negative', 'positive']
-#print(classification_report(y_test, y_pred, target_names=class_names))
-#
-#
-## In[ ]:
-#
-#
-#def show_confusion_matrix(confusion_matrix):
-#    
-#    hmap = sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues")
-#    hmap.yaxis.set_ticklabels(hmap.yaxis.get_ticklabels(), rotation=0, ha='right')
-#    hmap.xaxis.set_ticklabels(hmap.xaxis.get_ticklabels(), rotation=30, ha='right')
-#    plt.ylabel('True sentiment')
-#    plt.xlabel('Predicted sentiment');
-#    
-#cm = confusion_matrix(y_test, y_pred)
-#df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
-#show_confusion_matrix(df_cm)
-#
-#
-## In[ ]:
-#
-#
-#idx = 1
-#review_text = y_review_texts[idx]
-#true_sentiment = y_test[idx]
-#
-#pred_df = pd.DataFrame({'class_names': class_names, 
-#                        'values': y_pred_probs[idx] 
-#                       })
-#
-#print(review_text)
-#print()
-#print(f'True sentiment: {class_names[true_sentiment]}')
-#
-#
-## In[ ]:
-#
-#
+def train_model(model, data_loader, loss_fn, optimizer, scheduler, n_examples):
+   model = model.train()
+   losses = []
+   correct_predictions = 0
+   
+   for d in data_loader:
+       input_ids = d['input_ids']
+       attention_mask = d['attention_mask']
+       reshaped_attention_mask = attention_mask.reshape(d['attention_mask'].shape[0], 1, 1, d['attention_mask'].shape[1])
+       targets = d['labels']
+       
+       outputs= model(input_ids = input_ids, attention_mask = reshaped_attention_mask)
+       _, preds = torch.max(outputs, dim = 1)
+       loss = loss_fn(outputs, targets.to('cuda:1'))
+       
+       correct_predictions += torch.sum(preds == targets.to('cuda:1'))
+       losses.append(loss.item())
+       
+       loss.backward()
+       torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 1.0)
+       optimizer.step()
+       scheduler.step()
+       optimizer.zero_grad()
+       
+   return correct_predictions.double() / n_examples, np.mean(losses)
+       
+
+
+def eval_model(model, data_loader, loss_fn, n_examples):
+   model = model.eval()
+   losses = []
+   correct_predictions = 0
+   
+   with torch.no_grad():
+       for d in data_loader:
+           input_ids = d['input_ids']
+           attention_mask = d['attention_mask']
+           reshaped_attention_mask = attention_mask.reshape(d['attention_mask'].shape[0], 1, 1, d['attention_mask'].shape[1])
+           targets = d['labels']
+           
+           outputs = model(input_ids = input_ids, attention_mask = reshaped_attention_mask)
+           _, preds = torch.max(outputs, dim = 1)
+           
+           loss = loss_fn(outputs, targets.to('cuda:1'))
+           
+           correct_predictions += torch.sum(preds == targets.to('cuda:1'))
+           losses.append(loss.item())
+           
+       return correct_predictions.double() / n_examples, np.mean(losses)
+
+
+from collections import defaultdict
+
+history = defaultdict(list)
+best_accuracy = 0
+
+
+get_ipython().run_cell_magic('time', '', "\nfor epoch in range(EPOCHS):\n    print(f'Epoch {epoch + 1}/{EPOCHS}')\n    print('-' * 10)\n    \n    train_acc, train_loss = train_model(multi_gpu_roberta, train_data_loader, loss_fn, optimizer, scheduler, len(df_train))\n    print(f'Train Loss: {train_loss} ; Train Accuracy: {train_acc}')\n    \n    val_acc, val_loss = eval_model(multi_gpu_roberta, val_data_loader, loss_fn, len(df_val))\n    print(f'Val Loss: {val_loss} ; Val Accuracy: {val_acc}')\n    \n    print()\n    \n    history['train_acc'].append(train_acc)\n    history['train_loss'].append(train_loss)\n    history['val_acc'].append(val_acc)\n    history['val_loss'].append(val_loss)\n    \n    if val_acc > best_accuracy:\n        torch.save(multi_gpu_roberta.state_dict(), 'multi_gpu_roberta_best_model_state.bin')\n        best_acc = val_acc\n")
+
+
+
+import matplotlib.pyplot as plt
+
+plt.plot(history['train_acc'], label='train accuracy')
+plt.plot(history['val_acc'], label='validation accuracy')
+plt.title('Training history')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend()
+plt.ylim([0, 1]);
+
+
+def get_predictions(model, data_loader):
+   model = model.eval()
+   review_texts = []
+   predictions = []
+   prediction_probs = []
+   real_values = []
+   with torch.no_grad():
+       
+       for d in data_loader:
+
+           texts = d["review_text"]
+           input_ids = d["input_ids"]
+           attention_mask = d["attention_mask"]
+           labels = d["labels"]
+
+           outputs = model(input_ids=input_ids,
+                           attention_mask=attention_mask)
+
+           _, preds = torch.max(outputs, dim=1)
+           review_texts.extend(texts)
+           predictions.extend(preds)
+           prediction_probs.extend(outputs)
+           real_values.extend(labels)
+       predictions = torch.stack(predictions).cpu()
+       prediction_probs = torch.stack(prediction_probs).cpu()
+       real_values = torch.stack(real_values).cpu()
+   return review_texts, predictions, prediction_probs, real_values
+
+
+y_review_texts, y_pred, y_pred_probs, y_test = get_predictions(multi_gpu_roberta, val_data_loader)
+
+
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+
+
+class_names = ['negative', 'positive']
+print(classification_report(y_test, y_pred, target_names=class_names))
+
+
+def show_confusion_matrix(confusion_matrix):
+   
+   hmap = sns.heatmap(confusion_matrix, annot=True, fmt="d", cmap="Blues")
+   hmap.yaxis.set_ticklabels(hmap.yaxis.get_ticklabels(), rotation=0, ha='right')
+   hmap.xaxis.set_ticklabels(hmap.xaxis.get_ticklabels(), rotation=30, ha='right')
+   plt.ylabel('True sentiment')
+   plt.xlabel('Predicted sentiment');
+   
+cm = confusion_matrix(y_test, y_pred)
+df_cm = pd.DataFrame(cm, index=class_names, columns=class_names)
+show_confusion_matrix(df_cm)
+
+idx = 1
+review_text = y_review_texts[idx]
+true_sentiment = y_test[idx]
+
+pred_df = pd.DataFrame({'class_names': class_names, 
+                       'values': y_pred_probs[idx] 
+                      })
+
+print(review_text)
+print()
+print(f'True sentiment: {class_names[true_sentiment]}')
+
+
 #sns.barplot(x='values', y='class_names', data=pred_df, orient='h')
 #plt.ylabel('sentiment')
 #plt.xlabel('probability')
