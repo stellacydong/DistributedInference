@@ -135,14 +135,6 @@ def hello_world():
         "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
     ] 
     
-    # # load a base model and tokenizer
-    # model_path = "meta-llama/Llama-2-7b-hf"
-    # model = AutoModelForCausalLM.from_pretrained(
-    #     model_path,    
-    #     device_map={"": accelerator.process_index},
-    #     torch_dtype=torch.bfloat16,
-    # )
-    # tokenizer = AutoTokenizer.from_pretrained(model_path) 
 
     model_path='meta-llama/Llama-2-7b-hf' 
 
@@ -183,11 +175,13 @@ def hello_world():
     
     # collect results from all the GPUs
     results_gathered=gather_object(results)
-    
+
     if accelerator.is_main_process:
         timediff=time.time()-start
         num_tokens=sum([r["num_tokens"] for r in results_gathered ])
     
         print(f"tokens/sec: {num_tokens//timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
 
-notebook_launcher(hello_world, num_processes=5)
+notebook_launcher(hello_world, num_processes=2)
+
+print('\n ******** ') 
