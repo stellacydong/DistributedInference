@@ -68,14 +68,32 @@ def hello_world():
 
     accelerator = Accelerator()
 
-    model_path="models/llama2-7b"
-    model = AutoModelForCausalLM.from_pretrained(
-        model_path,    
-        device_map={"": accelerator.process_index},
-        torch_dtype=torch.bfloat16,
-        token = "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"
+    model_path='meta-llama/Llama-2-7b-hf' 
+
+    model = transformers.AutoModelForCausalLM.from_pretrained(
+    model_path,
+    trust_remote_code="true",
+    torch_dtype=fp_type,
+    device_map= None,
+    # token=HF_TOKEN,
+    use_auth_token="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")
+
+    tokenizer = AutoTokenizer.from_pretrained(
+    model_path, 
+    trust_remote_code="true", 
+    padding_side="left",
+    token="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", 
     )
-    tokenizer = AutoTokenizer.from_pretrained(model_path)   
+
+
+    # model_path="models/llama2-7b"
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     model_path,    
+    #     device_map={"": accelerator.process_index},
+    #     torch_dtype=torch.bfloat16,
+    #     token = "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"
+    # )
+    # tokenizer = AutoTokenizer.from_pretrained(model_path)   
 
     with accelerator.split_between_processes(prompts_all) as prompts:
         outputs=[]
