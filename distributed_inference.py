@@ -172,8 +172,13 @@ def hello_world():
             results["num_tokens"] += len(output_tokenized)
     
         results=[ results ] # transform to list, otherwise gather_object() will not collect correctly
-        print('\n ******** ') 
-        print(results) 
+        
+        message= [f"Hello this is GPU {accelerator.process_index}"]
+        messages=gather_object(message)
+        accelerator.print(messages)
+        
+        accelerator.print('\n ******** ') 
+        accelerator.print(results) 
     
     # collect results from all the GPUs
     results_gathered=gather_object(results)
