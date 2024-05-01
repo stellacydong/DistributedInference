@@ -55,5 +55,5 @@ def hello_world():
     with open('outputs.txt','w') as file:
         file.write('\n\n'.join(outputs_gathered))
 
-notebook_launcher(hello_world, num_processes=1)
+notebook_launcher(hello_world, num_processes=2)
 
