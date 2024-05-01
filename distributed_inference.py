@@ -71,17 +71,14 @@ def hello_world():
 
     model_path='meta-llama/Llama-2-7b-hf' 
 
-    model = transformers.AutoModelForCausalLM.from_pretrained(
+    model = AutoModelForCausalLM.from_pretrained(
     model_path,
-    trust_remote_code="true",
     torch_dtype=torch.bfloat16,
-    device_map= None,
-    # token=HF_TOKEN,
+    device_map={"": accelerator.process_index},
     use_auth_token="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")
 
     tokenizer = AutoTokenizer.from_pretrained(
     model_path, 
-    trust_remote_code="true", 
     padding_side="left",
     token="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", 
     )
