@@ -123,16 +123,8 @@ def hello_world():
     
     # 10*10 Prompts. Source: https://www.penguin.co.uk/articles/2022/04/best-first-lines-in-books
     prompts_all=[
-        "The King is dead. Long live the Queen.",
-        "Once there were four children whose names were Peter, Susan, Edmund, and Lucy.",
-        "The story so far: in the beginning, the universe was created.",
-        "It was a bright cold day in April, and the clocks were striking thirteen.",
-        "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.",
-        "The sweat wis lashing oafay Sick Boy; he wis trembling.",
-        "124 was spiteful. Full of Baby's venom.",
-        "As Gregor Samsa awoke one morning from uneasy dreams he found himself transformed in his bed into a gigantic insect.",
-        "I write this sitting in the kitchen sink.",
-        "We were somewhere around Barstow on the edge of the desert when the drugs began to take hold.",
+        "Underneath the towering city skyline, where neon lights bathed the streets in a kaleidoscope of colors, a single shadow slipped through the alleyways."
+        "The shadow moved with purpose, darting between pools of light, its presence noticed only by the occasional stray cat."
     ] 
     
 
@@ -170,17 +162,15 @@ def hello_world():
             # store outputs and number of tokens in result{}
             results["outputs"].append( tokenizer.decode(output_tokenized) )
             results["num_tokens"] += len(output_tokenized)
-
-            message= [f"Hello this is GPU {accelerator.process_index}"]
-            messages=gather_object(message)
-            accelerator.print(messages)
-        
-            accelerator.print('\n ******** ') 
-            accelerator.print(results) 
     
         results=[ results ] # transform to list, otherwise gather_object() will not collect correctly
         
-
+        message= [f"Hello this is GPU {accelerator.process_index}"]
+        messages=gather_object(message)
+        accelerator.print(messages)
+    
+        accelerator.print('\n ******** ') 
+        accelerator.print(results) 
     
     # collect results from all the GPUs
     results_gathered=gather_object(results)
