@@ -71,6 +71,6 @@ def hello_world():
     
         print(f"tokens/sec: {num_tokens//timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
 
-notebook_launcher(hello_world, num_processes=1)
+notebook_launcher(hello_world, num_processes=2)
 
 
