@@ -1,47 +1,74 @@
-import torch
-from transformers import AutoTokenizer
-from petals import DistributedBloomForCausalLM
+from accelerate import notebook_launcher
+import transformers
 
-# Ensure PyTorch and CUDA are working correctly
-print("PyTorch version:", torch.__version__)
-print("CUDA is available:", torch.cuda.is_available())
-print("CUDA version:", torch.version.cuda)
+def hello_world():
+    from accelerate import Accelerator
+    from accelerate.utils import gather_object
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    from statistics import mean
+    import torch, time, json
+    
+    accelerator = Accelerator()
+    
+    # Example prompts to test the model
+    prompts_all=[
+        "Underneath the towering city skyline, where neon lights bathed the streets in a kaleidoscope of colors, a single shadow slipped through the alleyways.",
+        "The shadow moved with purpose, darting between pools of light, its presence noticed only by the occasional stray cat."
+    ]
+    
+    # Updated model path
+    model_path = "petals-team/StableBeluga2"
+    
+    # Load the pre-trained model and tokenizer
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        torch_dtype=torch.bfloat16,
+        device_map={"": accelerator.process_index}
+    )
 
-# Token for Hugging Face authentication
-hf_token = "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"  # Replace with your Hugging Face token
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_path,
+        padding_side="left",
+    )
+    
+    # Synchronize and start the timer
+    accelerator.wait_for_everyone()
+    start = time.time()
+    
+    # Distribute prompts among available GPUs
+    with accelerator.split_between_processes(prompts_all) as prompts:
+        # Store outputs in a dictionary
+        results = {"outputs": [], "num_tokens": 0}
+        
+        # Perform inference on each prompt
+        for prompt in prompts:
+            prompt_tokenized = tokenizer(prompt, return_tensors="pt").to("cuda")
+            output_tokenized = model.generate(**prompt_tokenized, max_new_tokens=100)[0]
+            
+            # Remove prompt from output
+            output_tokenized = output_tokenized[len(prompt_tokenized["input_ids"][0]):]
+            
+            # Store outputs and number of tokens in results
+            results["outputs"].append(tokenizer.decode(output_tokenized))
+            results["num_tokens"] += len(output_tokenized)
+        
+        # Transform results to a list for proper gathering
+        results = [results]
+        
+        message = [f"Hello, this is GPU {accelerator.process_index}"]
+        messages = gather_object(message)
+        accelerator.print(messages)
+        
+        accelerator.print("\n ******** ")
+        accelerator.print(results)
+    
+    # Gather results from all GPUs
+    results_gathered = gather_object(results)
+    
+    if accelerator.is_main_process:
+        timediff = time.time() - start
+        num_tokens = sum([r["num_tokens"] for r in results_gathered])
+        
+        print(f"tokens/sec: {num_tokens // timediff}, time {timediff}, total tokens {num_tokens}, total prompts {len(prompts_all)}")
 
-# Set some sample prompts for testing
-prompts = ["Example prompt 1", "Example prompt 2"]
-
-# Load the model and tokenizer
-model_path = "petals-team/StableBeluga2"
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    device_map="auto",  # Automatic device mapping by Accelerate
-    torch_dtype=torch.bfloat16,  # Efficient GPU usage
-    use_auth_token=hf_token,  # Authentication for gated repositories
-)
-
-tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=hf_token)
-
-# Ensure the tokenizer has a padding token to avoid padding errors
-if tokenizer.pad_token is None:
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-
-# Prepare inputs for multi-GPU inference
-inputs = tokenizer(
-    prompts,
-    return_tensors="pt",
-    padding=True,
-    truncation=True,
-    max_length=50,  # Adjust as needed
-)
-
-# Ensure tensors are on the correct device
-inputs = {key: tensor.to(torch.cuda.current_device()) for key, tensor in inputs.items()}
-
-# Generate text from the model
-output = model.generate(inputs["input_ids"], max_new_tokens=50)  # Adjust as needed
-generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-
-print("Generated Text:", generated_text)
+notebook_launcher(hello_world, num_processes=8)
