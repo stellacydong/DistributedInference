@@ -94,7 +94,7 @@ def hello_world():
             with accelerator.split_between_processes(self.prompts_all) as prompts:
                 # Batched inference on each GPU
                 bs = 8
-                batches = [prompts[i:i + bs] for i in range 0, len(prompts), bs]
+                batches = [prompts[i:i + bs] for i in range (0, len(prompts)), bs]
                 outputs = []
 
                 for prompt_batch in batches:
